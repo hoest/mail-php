@@ -56,17 +56,19 @@ function sendmail($to) {
   global $uid;
   $subject = "Bestelling: " . $uid;
 
-  $body  = "<html><body>";
-  $body .= "<h1>Bestelling " . $uid . "</h1>";
-  $body .= "<p>Hieronder vindt u het ingevulde bestelformulier:</p>";
+  $html  = "<html><body>";
+  $html .= "<h1>Bestelling " . $uid . "</h1>";
+  $html .= "<p>Hieronder vindt u het ingevulde bestelformulier:</p>";
 
   foreach ($_POST as $key => $value) {
-    $body .= "<p><strong>" . $key . ":</strong><br />" . nl2br(htmlentities($value)) . "</p>";
+    if(!empty($value)) {
+      $html .= "<p><strong>" . $key . ":</strong><br />" . nl2br(htmlentities($value)) . "</p>";
+    }
   }
 
-  $body .= "</body></html>";
+  $html .= "</body></html>";
 
-  return multipartmail($_POST["Naam"], $_POST["E-mail"], $to, $subject, $body);
+  return multipartmail($_POST["Naam"], $_POST["E-mail"], $to, $subject, $html);
 }
 
 // verstuur het 'bedankt'-mailtje
@@ -74,12 +76,12 @@ function sendthanks($to) {
   global $emailaddress, $uid;
   $subject = "Bedankt voor uw bestelling";
 
-  $body  = "<html><body>";
-  $body .= "<h1>Bestelling verzonden</h1>";
-  $body .= "<p>Uw bestelling (nr. " . $uid . ") is verzonden naar " . $emailaddress . ", waarvoor dank.</p>";
-  $body .= "<p>M.v.g.,</p><p>Afzender<br />" . $emailaddress . "</p>";
+  $html  = "<html><body>";
+  $html .= "<h1>Bestelling verzonden</h1>";
+  $html .= "<p>Uw bestelling (nr. " . $uid . ") is verzonden naar " . $emailaddress . ", waarvoor dank.</p>";
+  $html .= "<p>M.v.g.,</p><p>Afzender<br />" . $emailaddress . "</p>";
 
-  return multipartmail("Mediterranee Food", $emailaddress, $to, $subject, $body);
+  return multipartmail("Mediterranee Food", $emailaddress, $to, $subject, $html);
 }
 
 // multipart mail versturen
@@ -98,7 +100,7 @@ function multipartmail($name, $from, $to, $subject, $html) {
   $body  = "--phpMailer-" . $boundary . "\n";
   $body .= "Content-Type: text/plain; charset=\"ISO-8859-1\"\n";
   $body .= "Content-Transfer-Encoding: base64\r\n";
-  $body .= chunk_split(base64_encode(strip_tags(preg_replace('/<br(\s+)?\/?>/i', "\n", $html))));
+  $body .= chunk_split(base64_encode(strip_tags(preg_replace('/<br(\s+)?\/?>/i', "\n", preg_replace('/<p>/i', "\n\n", $html)))));
 
   // html part
   $body .= "--phpMailer-" . $boundary . "\n";
