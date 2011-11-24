@@ -2,7 +2,7 @@ Simple PHP mailer
 ===
 With this simple PHP file, you can send mail from a HTML-form.
 
-TODO
+How to use it?
 ---
 * Open mail.php in a text-editor
 * Change the first variables
