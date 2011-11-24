@@ -14,6 +14,9 @@ $thanksurl = "../pages/thanks.html";
 // Mailadres waarnaartoe het bericht verstuurd moet worden
 $emailaddress = "email@address.com";
 
+// De verplichte velden
+$required = array("Naam", "Bedrijfsnaam", "Telefoonnumer", "E-mail");
+
 ////////////////////////////////////////////////////////////////////////////////
 // Hieronder is de werkelijke programmatuur; wees erg voorzichtig met aanpassen
 // van deze functionaliteit, tenzij je verstand van zaken hebt.
@@ -24,7 +27,28 @@ $uid = strtoupper(uniqid(""));
 
 // controleer of het verplichte veld is ingevuld
 function isvalid($fieldname) {
-  return (isset($_POST[$fieldname]) && $_POST[$fieldname] != "");
+  $valid = false;
+
+  if(isset($_POST[$fieldname]) && !empty($_POST[$fieldname])) {
+    $valid = true;
+  }
+
+  return $valid;
+}
+
+function checkrequired() {
+  global $required;
+
+  $valid = true;
+  foreach($required as $i => $field) {
+    if(!isvalid($field)) {
+      // veld is niet goed ingevuld
+      $valid = false;
+      break;
+    }
+  }
+
+  return $valid;
 }
 
 // verstuur de bestelling-mail
@@ -78,17 +102,18 @@ function handle() {
   global $formurl, $emailaddress, $thanksurl;
 
   // controleer eerst de verplichte velden
-  if(!isvalid("Naam") || !isvalid("Bedrijfsnaam") || !isvalid("Telefoonnumer") || !isvalid("E-mail")) {
-    redirect($formurl . "?error=invalid");
+  if(checkrequired()) {
+    // probeer de mails te versturen
+    if (sendmail($emailaddress) && sendthanks($_POST["E-mail"])) {
+      // redirect naar het bedankje
+      redirect($thanksurl);
+    } else {
+      // het mailen gaat mis; redirect naar formulier met deze parameter
+      redirect($formurl . "?error=mail-error");
+    }
   }
-
-  // probeer de mails te versturen
-  if (sendmail($emailaddress) && sendthanks($_POST["E-mail"])) {
-    // redirect naar het bedankje
-    redirect($thanksurl);
-  } else {
-    // het mailen gaat mis; redirect naar formulier met deze parameter
-    redirect($formurl . "?error=mail-error");
+  else {
+    redirect($formurl . "?error=invalid");
   }
 }
 
